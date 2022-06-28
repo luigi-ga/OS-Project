@@ -21,8 +21,13 @@ typedef struct MemInfo {
     unsigned long buffers;
     unsigned long swapTotal;
     unsigned long swapFree;
-    unsigned long cached;
+    unsigned long memAvailable;
 } MemInfo;
+
+
+void get_loadavg(LoadAvg *loads);
+void get_meminfo(MemInfo *mem);
+void get_uptime(double *uptime);
 
 
 #endif
