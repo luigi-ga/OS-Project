@@ -19,15 +19,20 @@
 #include <signal.h>
 
 
-
+int print = 1;
 
 void sig_handler(int signum) {
-    write(STDOUT_FILENO, "\e[1;1H\e[2J", 11);
-    alarm(1);
+    print = 1;
+}
+
+int filter(const struct dirent *dir) {
+  return !fnmatch("[1-9]*", dir->d_name, 0);
 }
 
 
 void print_top() {
+    write(STDOUT_FILENO, "\e[1;1H\e[2J", 11); 
+
     time_t rawtime;
     time(&rawtime);    
     struct tm *time = localtime(&rawtime);
@@ -55,20 +60,24 @@ void print_top() {
             MiB(mem->memAvailable));
 
     //CICLO FOR SUI PID
+    printf("\n%c[%d;%dmPID       |USER  |PR   |NI   |VIRT      |RES  |SH |S    |%%CPU |%%MEM |TIME+     |COMMAND%c[%dm\n",27,1,35,27,0);
+    struct dirent **namelist;
     ProcInfo *proc = (ProcInfo*)malloc(sizeof(ProcInfo));
-    get_procinfo(proc, 157);
-
-    printf("PID: %d\nPR: %ld\nNI: %ld\nVIRT: %lu\nRES: %ld\nS: %c\n%%CPU: %.1f\n%%MEM: %.1f\nTIME+: %ld\nCOMMAND: %s\n",
-            proc->pid, 
-            proc->priority,            
-            proc->nice,             
-            (long int) MiB(proc->virt), 
-            proc->res,
-            proc->state, 
-            (float) (proc->utime + proc->stime + proc->cutime + proc->cstime) / (uptime - (proc->starttime / 100)),
-            25.5,
-            (long int) (uptime - proc->starttime),
-            proc->command);
+    int n = scandir("/proc", &namelist, filter, alphasort);
+    while(n--) {  
+        get_procinfo(proc, atoi(namelist[n]->d_name));
+        printf("%-10d| user |%-5ld|%-5ld|%-10lu|%-5ld|SHR|%-5c|%-5.1f|%-5.1f|%-10ld|%s\n",
+                proc->pid, 
+                proc->priority,            
+                proc->nice,             
+                (long int) MiB(proc->virt), 
+                proc->res,
+                proc->state, 
+                (float) (proc->utime + proc->stime + proc->cutime + proc->cstime) / (uptime - (proc->starttime / 100)),
+                25.5,
+                (long int) (uptime - proc->starttime),
+                proc->command);
+    }
     
     //printf("The PID %d has spent %lds in user mode, %lds in kernel mode. Total CPU usage is %lds\n", proc->pid, proc->utime / 100, proc->stime / 100, (proc->utime + proc->stime)/100);
     //printf("The process has been running for %lds. So, the process has used %lf%% of CPU\n", (long int) (uptime - proc->starttime / 100), (proc->utime + proc->stime) / (uptime - (proc->starttime / 100)));
@@ -77,17 +86,20 @@ void print_top() {
     free(proc);    
     free(loads);
     free(mem);
+    
+    alarm(1);
 }
 
 
 
 int main() {
     signal(SIGALRM, sig_handler); // Register signal handler
-    alarm(1);                     // Scheduled alarm after 2 seconds
-
+    
     while(1) {
-        print_top();
-        sleep(1);
+        if(print) {
+            print = 0;
+            print_top();
+        } 
     }
     return 0;
 }
