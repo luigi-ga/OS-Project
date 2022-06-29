@@ -54,18 +54,24 @@ void print_top() {
             MiB((mem->swapTotal - mem->swapFree)), 
             MiB(mem->memAvailable));
 
+    //CICLO FOR SUI PID
     ProcInfo *proc = (ProcInfo*)malloc(sizeof(ProcInfo));
-    get_procinfo(proc, 1);
+    get_procinfo(proc, 157);
 
-    printf("PID: %d\nCOMMAND: %s\nS: %c\nPR: %ld\nNI: %ld\nTIME+: %ld\nVIRT: %lu\nRES: %ld\n",
+    printf("PID: %d\nPR: %ld\nNI: %ld\nVIRT: %lu\nRES: %ld\nS: %c\n%%CPU: %.1f\n%%MEM: %.1f\nTIME+: %ld\nCOMMAND: %s\n",
             proc->pid, 
-            proc->command, 
-            proc->state, 
-            proc->priority, 
-            proc->nice, 
-            (long int) (uptime - proc->starttime)/60,
+            proc->priority,            
+            proc->nice,             
             (long int) MiB(proc->virt), 
-            proc->res);
+            proc->res,
+            proc->state, 
+            (float) (proc->utime + proc->stime + proc->cutime + proc->cstime) / (uptime - (proc->starttime / 100)),
+            25.5,
+            (long int) (uptime - proc->starttime),
+            proc->command);
+    
+    //printf("The PID %d has spent %lds in user mode, %lds in kernel mode. Total CPU usage is %lds\n", proc->pid, proc->utime / 100, proc->stime / 100, (proc->utime + proc->stime)/100);
+    //printf("The process has been running for %lds. So, the process has used %lf%% of CPU\n", (long int) (uptime - proc->starttime / 100), (proc->utime + proc->stime) / (uptime - (proc->starttime / 100)));
     
     
     free(proc);    

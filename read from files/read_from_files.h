@@ -32,6 +32,8 @@ typedef struct ProcInfo {
     char state;
     unsigned long utime;
     unsigned long stime;
+    unsigned long cutime;
+    unsigned long cstime;
     long long starttime;
     long int priority;
     long int nice;

@@ -51,12 +51,14 @@ void get_procinfo(ProcInfo *proc, int pid) {
     FILE *fp = fopen(filename, "r");
     if(!fp) handle_error("ERROR (get_procinfo): fopen /proc/[pid]/stat file");
     
-    fscanf(fp, "%d %s %c %*d %*d %*d %*d %*d %*d %*d %*d %*d %*d %lu %lu %*d %*d %ld %ld %*d %*d %lld %lu %ld %*d %*d", 
+    fscanf(fp, "%d %s %c %*d %*d %*d %*d %*d %*d %*d %*d %*d %*d %lu %lu %lu %lu %ld %ld %*d %*d %lld %lu %ld", 
             &proc->pid, 
             proc->command, 
             &proc->state,
             &proc->utime,
             &proc->stime,
+            &proc->cutime,
+            &proc->cstime,
             &proc->priority,
             &proc->nice,            
             &proc->starttime,
